@@ -5,9 +5,10 @@ export const prerender = false;
 
 const attempts = new Map<string, { count: number; resetsAt: number }>();
 
-export const POST: APIRoute = async ({ request, clientAddress }) => {
+export const POST: APIRoute = async ({ request, clientAddress, locals }) => {
   if (!sameOrigin(request)) return Response.json({ error: 'Request rejected.' }, { status: 403 });
-  if (!authConfigured()) return Response.json({ error: 'Admin login is not configured on this server.' }, { status: 503 });
+  const env = locals.runtime.env;
+  if (!authConfigured(env)) return Response.json({ error: 'Admin login is not configured on this server.' }, { status: 503 });
 
   const address = clientAddress || 'unknown';
   const now = Date.now();
@@ -24,12 +25,12 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   }
   const username = typeof values.username === 'string' ? values.username : '';
   const password = typeof values.password === 'string' ? values.password : '';
-  if (!verifyCredentials(username, password)) {
+  if (!verifyCredentials(username, password, env)) {
     attempts.set(address, current && current.resetsAt > now
       ? { count: current.count + 1, resetsAt: current.resetsAt }
       : { count: 1, resetsAt: now + 15 * 60 * 1000 });
     return Response.json({ error: 'The username or password is incorrect.' }, { status: 401 });
   }
   attempts.delete(address);
-  return Response.json({ ok: true }, { headers: { 'Set-Cookie': createAdminCookie() } });
+  return Response.json({ ok: true }, { headers: { 'Set-Cookie': await createAdminCookie(env, request) } });
 };

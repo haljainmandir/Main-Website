@@ -10,10 +10,13 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "start": "node ./dist/server/entry.mjs"
+    "db:migrate:local": "wrangler d1 migrations apply haljainmandir-events --local",
+    "db:migrate:remote": "wrangler d1 migrations apply haljainmandir-events --remote",
+    "deploy": "npm run build && wrangler pages deploy dist --project-name haljainmandir"
   },
   "dependencies": {
-    "@astrojs/node": "^9.4.2",
-    "astro": "^5.13.5"
+    "@astrojs/cloudflare": "^12.6.13",
+    "astro": "^5.13.5",
+    "wrangler": "^4.142.0"
   }
 }

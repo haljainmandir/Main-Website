@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "haljainmandir",
+  "compatibility_date": "2026-09-27",
+  "compatibility_flags": ["nodejs_compat"],
+  "pages_build_output_dir": "./dist",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "haljainmandir-events",
+      "database_id": "2d1db7d2-086b-4908-9b53-04011d0deefb",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

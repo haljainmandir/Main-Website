@@ -5,7 +5,7 @@ import SiteFooter from '../components/SiteFooter.astro';
 import { readEvents } from '../lib/events';
 
 export const prerender = false;
-const events = await readEvents();
+const events = await readEvents(Astro.locals.runtime.env.DB);
 const now = Date.now();
 const upcoming = events
   .filter((event) => event.status === 'published' && Date.parse(event.startsAt) >= now)

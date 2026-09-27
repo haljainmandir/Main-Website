@@ -3,8 +3,8 @@ import { clearAdminCookie, isAdminRequest, sameOrigin } from '../../../lib/admin
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   if (!sameOrigin(request)) return Response.json({ error: 'Request rejected.' }, { status: 403 });
-  if (!isAdminRequest(request)) return Response.json({ ok: true });
-  return Response.json({ ok: true }, { headers: { 'Set-Cookie': clearAdminCookie() } });
+  if (!await isAdminRequest(request, locals.runtime.env)) return Response.json({ ok: true });
+  return Response.json({ ok: true }, { headers: { 'Set-Cookie': clearAdminCookie(request) } });
 };

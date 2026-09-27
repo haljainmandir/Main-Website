@@ -1,50 +1,62 @@
-import { existsSync } from 'node:fs';
-import { loadEnvFile } from 'node:process';
-import { createHmac, timingSafeEqual } from 'node:crypto';
-
-// Astro/Vite reads .env for import.meta.env, but process.env is needed for
-// secrets at request time. Node 20.12+ can load the local file directly.
-if (existsSync('.env')) loadEnvFile('.env');
-
 export const ADMIN_COOKIE = 'temple_admin_session';
 const SESSION_LENGTH_MS = 8 * 60 * 60 * 1000;
+const encoder = new TextEncoder();
 
-export function authConfigured() {
-  return Boolean(process.env.ADMIN_USERNAME && process.env.ADMIN_PASSWORD && process.env.ADMIN_SESSION_SECRET);
+export type AdminEnvironment = {
+  ADMIN_USERNAME?: string;
+  ADMIN_PASSWORD?: string;
+  ADMIN_SESSION_SECRET?: string;
+};
+
+export function authConfigured(env: AdminEnvironment) {
+  return Boolean(env.ADMIN_USERNAME && env.ADMIN_PASSWORD && env.ADMIN_SESSION_SECRET);
 }
 
-export function verifyCredentials(username: string, password: string) {
-  const expectedUser = process.env.ADMIN_USERNAME || '';
-  const expectedPassword = process.env.ADMIN_PASSWORD || '';
-  return constantTimeEqual(username, expectedUser) && constantTimeEqual(password, expectedPassword);
+export function verifyCredentials(username: string, password: string, env: AdminEnvironment) {
+  return constantTimeEqual(username, env.ADMIN_USERNAME || '')
+    && constantTimeEqual(password, env.ADMIN_PASSWORD || '');
 }
 
 function constantTimeEqual(left: string, right: string) {
-  const leftDigest = createHmac('sha256', 'temple-login-compare').update(left).digest();
-  const rightDigest = createHmac('sha256', 'temple-login-compare').update(right).digest();
-  return timingSafeEqual(leftDigest, rightDigest) && left === right;
+  const leftBytes = encoder.encode(left);
+  const rightBytes = encoder.encode(right);
+  const maxLength = Math.max(leftBytes.length, rightBytes.length);
+  let difference = leftBytes.length ^ rightBytes.length;
+  for (let index = 0; index < maxLength; index += 1) {
+    difference |= (leftBytes[index] ?? 0) ^ (rightBytes[index] ?? 0);
+  }
+  return difference === 0;
 }
 
-function signature(expires: string) {
-  return createHmac('sha256', process.env.ADMIN_SESSION_SECRET || '')
-    .update(`temple-admin:${expires}`)
-    .digest('base64url');
+async function signature(expires: string, secret: string) {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const digest = new Uint8Array(await crypto.subtle.sign('HMAC', key, encoder.encode(`temple-admin:${expires}`)));
+  return btoa(Array.from(digest, (byte) => String.fromCharCode(byte)).join(''))
+    .replaceAll('+', '-')
+    .replaceAll('/', '_')
+    .replace(/=+$/, '');
 }
 
-export function createAdminCookie() {
+export async function createAdminCookie(env: AdminEnvironment, request: Request) {
   const expires = String(Date.now() + SESSION_LENGTH_MS);
-  const token = `${expires}.${signature(expires)}`;
-  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  const token = `${expires}.${await signature(expires, env.ADMIN_SESSION_SECRET || '')}`;
+  const secure = new URL(request.url).protocol === 'https:' ? '; Secure' : '';
   return `${ADMIN_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${SESSION_LENGTH_MS / 1000}${secure}`;
 }
 
-export function clearAdminCookie() {
-  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+export function clearAdminCookie(request: Request) {
+  const secure = new URL(request.url).protocol === 'https:' ? '; Secure' : '';
   return `${ADMIN_COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${secure}`;
 }
 
-export function isAdminRequest(request: Request) {
-  if (!authConfigured()) return false;
+export async function isAdminRequest(request: Request, env: AdminEnvironment) {
+  if (!authConfigured(env)) return false;
   const token = request.headers.get('cookie')?.split(';')
     .map((part) => part.trim())
     .find((part) => part.startsWith(`${ADMIN_COOKIE}=`))
@@ -52,7 +64,8 @@ export function isAdminRequest(request: Request) {
   if (!token) return false;
   const [expires, providedSignature] = token.split('.');
   if (!expires || !providedSignature || Number(expires) <= Date.now()) return false;
-  return constantTimeEqual(providedSignature, signature(expires));
+  const expectedSignature = await signature(expires, env.ADMIN_SESSION_SECRET || '');
+  return constantTimeEqual(providedSignature, expectedSignature);
 }
 
 export function sameOrigin(request: Request) {

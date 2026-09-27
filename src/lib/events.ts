@@ -1,7 +1,3 @@
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
-import { randomUUID } from 'node:crypto';
-
 export type TempleEvent = {
   id: string;
   title: string;
@@ -16,28 +12,33 @@ export type TempleEvent = {
   updatedAt: string;
 };
 
-const eventsPath = () => resolve(process.env.EVENTS_FILE || 'data/events.json');
+type StoredEvent = { id: string; payload: string };
 
-export async function readEvents(): Promise<TempleEvent[]> {
-  const file = eventsPath();
-  try {
-    const parsed: unknown = JSON.parse(await readFile(file, 'utf8'));
-    if (!Array.isArray(parsed)) throw new Error('Event store must contain a JSON array.');
-    return parsed as TempleEvent[];
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, '[]\n', { flag: 'wx' }).catch(() => undefined);
-    return [];
-  }
+export async function readEvents(db: D1Database): Promise<TempleEvent[]> {
+  const { results } = await db.prepare('SELECT id, payload FROM events ORDER BY starts_at ASC').all<StoredEvent>();
+  return results.map(({ payload }) => JSON.parse(payload) as TempleEvent);
 }
 
-export async function writeEvents(events: TempleEvent[]): Promise<void> {
-  const file = eventsPath();
-  await mkdir(dirname(file), { recursive: true });
-  const temporaryFile = `${file}.${randomUUID()}.tmp`;
-  await writeFile(temporaryFile, `${JSON.stringify(events, null, 2)}\n`, { mode: 0o600 });
-  await rename(temporaryFile, file);
+export async function findEvent(db: D1Database, id: string): Promise<TempleEvent | null> {
+  const row = await db.prepare('SELECT id, payload FROM events WHERE id = ?').bind(id).first<StoredEvent>();
+  return row ? JSON.parse(row.payload) as TempleEvent : null;
+}
+
+export async function saveEvent(db: D1Database, event: TempleEvent): Promise<void> {
+  await db.prepare(`
+    INSERT INTO events (id, starts_at, status, payload, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      starts_at = excluded.starts_at,
+      status = excluded.status,
+      payload = excluded.payload,
+      updated_at = excluded.updated_at
+  `).bind(event.id, event.startsAt, event.status, JSON.stringify(event), event.createdAt, event.updatedAt).run();
+}
+
+export async function removeEvent(db: D1Database, id: string): Promise<boolean> {
+  const result = await db.prepare('DELETE FROM events WHERE id = ?').bind(id).run();
+  return result.meta.changes > 0;
 }
 
 export function validateEvent(input: unknown): Omit<TempleEvent, 'id' | 'createdAt' | 'updatedAt'> {
@@ -83,7 +84,7 @@ export function eventFrom(input: unknown, existing?: TempleEvent): TempleEvent {
   const now = new Date().toISOString();
   return {
     ...details,
-    id: existing?.id || randomUUID(),
+    id: existing?.id || crypto.randomUUID(),
     createdAt: existing?.createdAt || now,
     updatedAt: now,
   };
