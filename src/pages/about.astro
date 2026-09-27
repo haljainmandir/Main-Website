@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { aboutContent } from '../data/about-content';
+
+export const prerender = false;
+const language = Astro.url.searchParams.get('lang') === 'hi' ? 'hi' : Astro.url.searchParams.get('lang') === 'kn' ? 'kn' : 'en';
+const content = language === 'hi' ? aboutContent.hi : aboutContent.en;
+const htmlLanguage = language;
+---
+<BaseLayout lang={htmlLanguage} title={`${content.pageTitle} | Shri Digambar Mahaveer Jain Temple (HAL)`} description={content.description}>
+  <SiteHeader active="about" language={language} />
+  <main class:list={['about-page', language === 'hi' && 'about-hindi']}>
+    <section class="page-hero"><div class="container"><p class="eyebrow"><span></span>{language === 'hi' ? 'हमारा मंदिर' : 'Our temple'}</p><h1>{content.pageTitle}</h1><p class="page-intro about-intro-title">{content.intro}</p></div></section>
+    <section class="section-pad"><div class="container about-story"><div><p class="eyebrow"><span></span>{content.historyEyebrow}</p><h2>{content.historyTitle}</h2></div><div class="about-prose"><p class="lead">{content.description}</p><p>{content.history}</p></div></div></section>
+    <section class="values-section section-pad"><div class="container"><div class="section-heading"><p class="eyebrow"><span></span>{content.deitiesEyebrow}</p><h2>{content.deitiesTitle}</h2></div><div class="values-grid">{content.deities.map((item, index) => <article><span class="value-number">{String(index + 1).padStart(2, '0')}</span><h3>{item.title}</h3><p>{item.description}</p></article>)}</div></div></section>
+    <section class="section-pad about-vision"><div class="container"><div class="about-vision-heading"><div><p class="eyebrow"><span></span>{content.visionEyebrow}</p><h2>{content.visionTitle}</h2></div><p class="lead">{content.visionIntro}</p></div><div class="values-grid">{content.activities.map((item, index) => <article><span class="value-number">0{index + 1}</span><h3>{item.title}</h3><p>{item.description}</p></article>)}</div></div></section>
+    <section class="etiquette-band about-welcome"><div class="container etiquette-inner"><span class="etiquette-icon">✳</span><div><p class="eyebrow eyebrow-light"><span></span>{language === 'hi' ? 'हार्दिक स्वागत' : 'A heartfelt welcome'}</p><h2>{language === 'hi' ? 'आप सभी सादर आमंत्रित हैं।' : 'We welcome you.'}</h2><p>{content.welcome}</p></div></div></section>
+  </main>
+  <SiteFooter />
+</BaseLayout>

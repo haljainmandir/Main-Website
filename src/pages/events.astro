@@ -1,0 +1,35 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { readEvents } from '../lib/events';
+
+export const prerender = false;
+const events = await readEvents();
+const now = Date.now();
+const upcoming = events
+  .filter((event) => event.status === 'published' && Date.parse(event.startsAt) >= now)
+  .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
+const past = events
+  .filter((event) => event.status === 'published' && Date.parse(event.startsAt) < now)
+  .sort((a, b) => Date.parse(b.startsAt) - Date.parse(a.startsAt));
+const dateLabel = (value: string, options: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', ...options }).format(new Date(value));
+const timeLabel = (value: string) => dateLabel(value, { hour: 'numeric', minute: '2-digit' });
+---
+<BaseLayout title="Temple Events | Shri Digambar Mahaveer Jain Temple (HAL)" description="Upcoming events, religious observances and community gatherings at Shri Digambar Mahaveer Jain Temple (HAL), Bengaluru.">
+  <SiteHeader active="events" />
+  <main>
+    <section class="page-hero"><div class="container"><p class="eyebrow"><span></span> Temple calendar</p><h1>Gather in faith.<br /><em>Celebrate together.</em></h1><p class="page-intro">Find upcoming pujas, festivals and community events at the temple. Please contact the temple if you need to confirm event details.</p></div></section>
+    <section class="events-section section-pad"><div class="container">
+      <div class="events-section-heading"><div><p class="eyebrow"><span></span> What’s coming up</p><h2>Upcoming <em>events.</em></h2></div><span class="event-count">{upcoming.length.toString().padStart(2, '0')} UPCOMING</span></div>
+      {upcoming.length ? <div class="event-grid">{upcoming.map((event) => <article class="event-card">
+        {event.imageUrl ? <img class="event-card-image" src={event.imageUrl} alt="" loading="lazy" /> : <div class="event-card-image event-placeholder" aria-hidden="true"><span class="notranslate" translate="no">श्री</span></div>}
+        <div class="event-card-body"><div class="event-date"><span>{dateLabel(event.startsAt, { month: 'short' }).toUpperCase()}</span><strong>{dateLabel(event.startsAt, { day: '2-digit' })}</strong><small>{dateLabel(event.startsAt, { year: 'numeric' })}</small></div>
+          <div class="event-card-copy"><p class="event-time">{timeLabel(event.startsAt)}{event.endsAt ? ` – ${timeLabel(event.endsAt)}` : ''}</p><h3>{event.title}</h3><p>{event.summary}</p><div class="event-location">⌖ <span>{event.location}</span></div>{event.detailsUrl && <a class="text-link" href={event.detailsUrl} target="_blank" rel="noreferrer">Event details <span aria-hidden="true">↗</span></a>}</div></div>
+      </article>)}</div> : <div class="events-empty"><span>✳</span><div><h3>New events will be announced here.</h3><p>Please check back for temple pujas, festivals and community gatherings.</p></div><a class="text-link" href="/visit#contact">Contact the temple <span aria-hidden="true">→</span></a></div>}
+      {past.length > 0 && <div class="past-events"><div class="events-section-heading"><div><p class="eyebrow"><span></span> Memories from the temple</p><h2>Past <em>events.</em></h2></div></div><div class="past-event-list">{past.map((event) => <article><time datetime={event.startsAt}>{dateLabel(event.startsAt, { day: '2-digit', month: 'short', year: 'numeric' })}</time><div><h3>{event.title}</h3><p>{event.summary}</p></div><span>{event.location}</span></article>)}</div></div>}
+    </div></section>
+  </main>
+  <SiteFooter />
+</BaseLayout>

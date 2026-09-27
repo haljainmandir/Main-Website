@@ -1,0 +1,27 @@
+---
+import { temple } from '../data/temple';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+const { active = 'home', language = 'en' } = Astro.props;
+const links = [
+  { href: '/', label: 'Home', id: 'home' },
+  { href: '/about', label: 'About', id: 'about' },
+  { href: '/events', label: 'Events', id: 'events' },
+  { href: '/#gallery', label: 'Gallery', id: 'gallery' },
+  { href: '/visit', label: 'Plan your visit', id: 'visit' },
+];
+---
+
+<div class="topline"><div class="container topline-inner"><span>॥ अहिंसा परमो धर्मः ॥</span><a href={`mailto:${temple.email}`}>{temple.email}</a></div></div>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/" aria-label={`${temple.name} home`}>
+      <span class="brand-mark notranslate" translate="no" aria-hidden="true">श्री</span>
+      <span class="brand-copy"><strong>{temple.name}</strong><small>Bengaluru, Karnataka</small></span>
+    </a>
+    <nav aria-label="Main navigation">
+      {links.map((link) => <a class:list={[active === link.id && 'active']} href={link.href}>{link.label}</a>)}
+      <a class="nav-contact" href="/visit#contact">Contact</a>
+      <LanguageSwitcher language={language} />
+    </nav>
+  </div>
+</header>

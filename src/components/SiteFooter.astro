@@ -1,0 +1,10 @@
+---
+import { temple } from '../data/temple';
+---
+<footer class="site-footer">
+  <div class="container footer-main">
+    <div><div class="footer-brand"><span class="brand-mark notranslate" translate="no" aria-hidden="true">श्री</span><strong>{temple.name}</strong></div><p>A place of devotion, reflection and community.</p></div>
+    <div class="footer-links"><a href="/about">About the temple</a><a href="/events">Events</a><a href="/visit">Plan your visit</a><a href={`mailto:${temple.email}`}>Email the temple</a><a href={temple.instagram} target="_blank" rel="noreferrer">Follow us on Instagram ↗</a></div>
+  </div>
+  <div class="container footer-bottom"><span>॥ अहिंसा परमो धर्मः ॥</span><span>With reverence and respect</span></div>
+</footer>

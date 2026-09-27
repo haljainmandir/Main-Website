@@ -1,0 +1,15 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { temple } from '../data/temple';
+---
+<BaseLayout title="Plan Your Visit | Shri Digambar Mahaveer Jain Temple (HAL)" description="Find contact and visitor information for Shri Digambar Mahaveer Jain Temple (HAL), Bengaluru.">
+  <SiteHeader active="visit" />
+  <main>
+    <section class="page-hero"><div class="container"><p class="eyebrow"><span></span> Shri Digambar Mahaveer Jain Temple (HAL)</p><h1>Plan your visit.</h1></div></section>
+    <section class="section-pad visit-details"><div class="container"><div class="visit-detail-grid"><article class="location-card"><span class="detail-kicker">01 · LOCATION</span><h2>Find the temple</h2><p>{temple.address}</p><div class="map-frame" id="map"><iframe title="Map showing Shri Digambar Mahaveer Jain Temple, Bengaluru" src={`https://www.openstreetmap.org/export/embed.html?bbox=${temple.location.longitude - 0.008}%2C${temple.location.latitude - 0.005}%2C${temple.location.longitude + 0.008}%2C${temple.location.latitude + 0.005}&layer=mapnik&marker=${temple.location.latitude}%2C${temple.location.longitude}`} loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></div><a class="text-link" href={temple.mapUrl} target="_blank" rel="noreferrer">Open in Google Maps <span aria-hidden="true">↗</span></a><small class="map-attribution">Map data © OpenStreetMap contributors</small></article><article><span class="detail-kicker">02 · DARSHAN</span><h2>Visiting hours</h2><div class="timing-group"><strong>Monday to Friday</strong><p>6:30 AM – 12:00 PM<br />5:00 PM – 8:00 PM</p></div><div class="timing-group"><strong>Saturday &amp; Sunday</strong><p>6:30 AM – 1:00 PM<br />5:00 PM – 8:00 PM</p></div><p class="muted">Timings may vary on festival days and during special observances.</p></article></div>
+      <div class="contact-card" id="contact"><div><p class="eyebrow"><span></span> Contact</p><h2>Temple<br /><em>enquiries.</em></h2></div><div class="contact-card-info"><div class="contact-method"><span>Email</span><a class="email-address" href={`mailto:${temple.email}`}>{temple.email} <span aria-hidden="true">↗</span></a></div><div class="contact-method"><span>Phone</span><a class="email-address phone-address" href={`tel:${temple.phone.replaceAll(' ', '')}`}>{temple.phone} <span aria-hidden="true">↗</span></a></div></div></div></div></section>
+  </main>
+  <SiteFooter />
+</BaseLayout>

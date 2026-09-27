@@ -1,0 +1,57 @@
+---
+const { language = 'en' } = Astro.props;
+---
+<div class="language-control">
+  <label for="language-select">Language</label>
+  <select id="language-select" aria-label="Choose page language">
+    <option value="en" selected={language === 'en'}>English</option>
+    <option value="hi" selected={language === 'hi'}>हिन्दी</option>
+    <option value="kn" selected={language === 'kn'}>ಕನ್ನಡ</option>
+  </select>
+</div>
+<script>
+  import { translations } from '../data/translations';
+
+  const picker = document.getElementById('language-select') as HTMLSelectElement | null;
+  const params = new URLSearchParams(window.location.search);
+  const requestedLanguage = params.get('lang');
+  const savedLanguage = localStorage.getItem('temple-language');
+  const language = requestedLanguage === 'hi' || requestedLanguage === 'kn'
+    ? requestedLanguage
+    : savedLanguage === 'hi' || savedLanguage === 'kn' ? savedLanguage : 'en';
+
+  function applyLanguage(selectedLanguage: 'en' | 'hi' | 'kn') {
+    document.documentElement.lang = selectedLanguage;
+    picker!.value = selectedLanguage;
+
+    const dictionary = translations[selectedLanguage];
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let node: Node | null;
+    while ((node = walker.nextNode())) {
+      const parent = node.parentElement;
+      if (!parent || parent.closest('[translate="no"], .notranslate, script, style, noscript, select, option')) continue;
+      const original = node.nodeValue ?? '';
+      const trimmed = original.trim();
+      const translated = dictionary[trimmed];
+      if (translated) node.nodeValue = original.replace(trimmed, translated);
+    }
+  }
+
+  if (picker) {
+    applyLanguage(language);
+    document.querySelectorAll<HTMLAnchorElement>('a[href^="/"]').forEach((link) => {
+      const linkUrl = new URL(link.href, window.location.origin);
+      if (language === 'en') linkUrl.searchParams.delete('lang');
+      else linkUrl.searchParams.set('lang', language);
+      link.href = `${linkUrl.pathname}${linkUrl.search}${linkUrl.hash}`;
+    });
+    picker.addEventListener('change', () => {
+      const selectedLanguage = picker.value as 'en' | 'hi' | 'kn';
+      localStorage.setItem('temple-language', selectedLanguage);
+      const nextUrl = new URL(window.location.href);
+      if (selectedLanguage === 'en') nextUrl.searchParams.delete('lang');
+      else nextUrl.searchParams.set('lang', selectedLanguage);
+      window.location.assign(nextUrl);
+    });
+  }
+</script>
