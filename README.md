@@ -6,11 +6,7 @@
 
 [🌐 Visit Live Website](https://haljainmandir.pages.dev/)
 
----
 
-![Shri Digambar Mahaveer Jain Temple](https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1200&q=80)
-
----
 
 </div>
 
