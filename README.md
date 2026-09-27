@@ -1,3 +1,44 @@
-# 🏛️ Shri Digambar Mahaveer Jain Temple (HAL) *An intuitive, multilingual web portal dedicated to the sacred Shri Digambar Mahaveer Jain Temple located in HAL, Bengaluru.* 🌐 Live Website
---- --- ## 🌟 About The Project This web application serves as a comprehensive information and visit-planning resource for devotees, visitors, and community members. It bridges tradition with technology by offering seamless access to temple details, darshan schedules, cultural traditions, and upcoming events, all wrapped in a clean, modern interface. To cater to a diverse community of worshippers, the platform is fully localized in **English**, **Hindi**, and **Kannada**. --- ## ✨ Key Features * **Multilingual Support:** Switch effortlessly between English, Hindi, and Kannada for an inclusive user experience. * **Darshan Timings & Schedule:** Up-to-date timings for daily rituals, aartis, and temple opening hours. * **Visit Planning:** Comprehensive location guides, address details, and contact information for pilgrims. * **Photo Gallery:** A visual showcase of the temple architecture, idols, and sacred premises. * **Events & Announcements:** Keeps the community informed about upcoming festivals, special pujas, and celebrations. * **Modern & Responsive:** Optimized for seamless viewing across mobile phones, tablets, and desktop computers. --- ## 🚀 Tech Stack * **Core:** HTML5, Modern CSS / Tailwind CSS, JavaScript * **Deployment & Hosting:** Cloudflare Pages --- ## 📦 Project Structure ```text ├── assets/ # Images, icons, and media files ├── css/ # Stylesheets and responsive layouts ├── js/ # Interactivity and language toggle scripts ├── index.html # English homepage ├── hindi.html # Hindi localized version ├── kannada.html # Kannada localized version └── README.md # Project documentation ``` --- ## 💻 Getting Started Locally To run or modify this project locally on your machine, follow these simple steps: 1. **Clone the repository:** ```bash git clone https://github.com/your-username/hal-jain-mandir.git ``` 2. **Navigate to the project directory:** ```bash cd hal-jain-mandir ``` 3. **Open the project:** Simply open `index.html` in your favorite web browser or use a local development server (like VS Code's *Live Server* extension). --- ## 🤝 Contributing Contributions, suggestions, and improvements are always welcome! If you notice any incorrect information or want to add new features: 1. Fork the Project 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`) 3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`) 4. Push to the Branch (`git push origin feature/AmazingFeature`) 5. Open a Pull Request --- ## 📄 License Distributed under the MIT License. See `LICENSE` for more information.
-🙏 Jai Jinendra 🙏
+<div align="center">
+
+# 🏛️ Shri Digambar Mahaveer Jain Temple (HAL)
+
+*An information and visit-planning resource for Shri Digambar Mahaveer Jain Temple located in HAL, Bengaluru.*
+
+[🌐 Visit Live Website](https://haljainmandir.pages.dev/)
+
+---
+
+![Shri Digambar Mahaveer Jain Temple](https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1200&q=80)
+
+---
+
+</div>
+
+## 🌟 About The Temple Portal
+
+This portal is dedicated to serving devotees, visitors, and pilgrims planning a visit to the **Shri Digambar Mahaveer Jain Temple** in HAL, Bengaluru. It provides a peaceful, easy-to-navigate digital space to help visitors connect with temple traditions and plan their daily darshan.
+
+To ensure all community members and devotees can access temple information easily, the portal is fully available in three languages:
+- **English**
+- **Hindi (हिंदी)**
+- **Kannada (ಕನ್ನಡ)**
+
+---
+
+## ✨ Information & Resources Available
+
+* **🙏 Daily Darshan & Ritual Timings:** Opening hours, daily Abhishek, Aarti times, and special worship schedules.
+* **📍 Location & Visit Planning:** Complete address details, directions, and contact information to help you reach the temple smoothly.
+* **🌺 Traditions & Heritage:** Insights into temple traditions, Digambar Jain values, and sacred practices.
+* **📸 Photo Gallery:** Visuals showcasing the temple architecture, idols, and serene campus environment.
+* **📅 Upcoming Events & Festivals:** Announcements regarding upcoming Jain festivals, Mahavir Jayanti celebrations, and special pujas.
+
+---
+
+<div align="center">
+
+🙏 **Jai Jinendra** 🙏
+
+*For any inquiries or visit assistance, please reach out through our official website.*
+
+</div>
