@@ -3,6 +3,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import { temple } from '../data/temple';
+import { readEvents } from '../lib/events';
+
+const allEvents = await readEvents(Astro.locals.runtime.env.DB);
+const now = Date.now();
+const upcomingEvents = allEvents
+  .filter((event) => event.status === 'published' && Date.parse(event.startsAt) > now)
+  .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
+const eventDate = (value: string) => new Intl.DateTimeFormat('en-IN', {
+  timeZone: 'Asia/Kolkata', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+}).format(new Date(value));
 ---
 <BaseLayout description="Discover Shri Digambar Mahaveer Jain Temple in Bengaluru. Find visitor information, temple details and contact information.">
   <SiteHeader active="home" />
@@ -42,5 +52,49 @@ import { temple } from '../data/temple';
 
     <section class="contact-strip"><div class="container contact-strip-inner"><div><p class="eyebrow"><span></span> We are here to help</p><h2>Planning a visit?</h2></div><p>For current timings, puja details or visitor enquiries, please get in touch with the temple.</p><a class="button button-primary" href="/visit#contact">Contact the temple <span aria-hidden="true">→</span></a></div></section>
   </main>
+  {upcomingEvents.length > 0 && <dialog class="event-announcement" aria-labelledby="event-announcement-title" data-event-announcement>
+    <div class="event-announcement-head">
+      <p class="eyebrow"><span></span> Temple events</p>
+      <button class="event-announcement-close" type="button" aria-label="Close event announcements">×</button>
+    </div>
+    <h2 id="event-announcement-title">Upcoming at the temple</h2>
+    <p class="event-announcement-intro">You are warmly invited to join us for these upcoming occasions.</p>
+    <div class="event-announcement-list">
+      {upcomingEvents.map((event) => <article class="event-announcement-card" data-event-id={event.id}>
+        <time datetime={event.startsAt}>{eventDate(event.startsAt)}</time>
+        <h3>{event.title}</h3>
+        <p>{event.summary}</p>
+        <p class="event-announcement-location">{event.location}</p>
+      </article>)}
+    </div>
+    <div class="event-announcement-actions">
+      <a class="button button-primary" href="/events" data-event-announcements-link>View all events <span aria-hidden="true">→</span></a>
+      <button class="event-announcement-dismiss" type="button">Continue to website</button>
+    </div>
+  </dialog>}
+  {upcomingEvents.length > 0 && <script>
+    const dialog = document.querySelector('[data-event-announcement]');
+    const storageKey = 'haljainmandir:seen-event-announcements';
+    if (dialog instanceof HTMLDialogElement) {
+      const cards = [...dialog.querySelectorAll('[data-event-id]')];
+      const ids = cards.map((card) => card.getAttribute('data-event-id')).filter(Boolean);
+      let seen = [];
+      try {
+        const stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        if (Array.isArray(stored)) seen = stored.filter((id) => typeof id === 'string');
+      } catch { /* Ignore malformed browser storage and show the announcements. */ }
+      if (ids.some((id) => !seen.includes(id))) dialog.showModal();
+
+      const markSeen = () => {
+        try { localStorage.setItem(storageKey, JSON.stringify([...new Set([...seen, ...ids])])); }
+        catch { /* The visitor can still dismiss the announcement if storage is unavailable. */ }
+      };
+      dialog.querySelector('.event-announcement-close')?.addEventListener('click', () => dialog.close());
+      dialog.querySelector('.event-announcement-dismiss')?.addEventListener('click', () => dialog.close());
+      dialog.querySelector('[data-event-announcements-link]')?.addEventListener('click', markSeen);
+      dialog.addEventListener('close', markSeen);
+      dialog.addEventListener('cancel', markSeen);
+    }
+  </script>}
   <SiteFooter />
 </BaseLayout>

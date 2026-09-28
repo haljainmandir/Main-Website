@@ -1,0 +1,90 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { nearbyTemples } from '../data/nearby-temples';
+import { temple } from '../data/temple';
+
+export const prerender = true;
+const language = Astro.url.searchParams.get('lang') === 'hi' || Astro.url.searchParams.get('lang') === 'kn'
+  ? Astro.url.searchParams.get('lang')! : 'en';
+const radians = (degrees: number) => degrees * Math.PI / 180;
+const distanceFromTemple = (latitude: number, longitude: number) => {
+  const earthRadiusKm = 6371;
+  const dLat = radians(latitude - temple.location.latitude);
+  const dLon = radians(longitude - temple.location.longitude);
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(radians(temple.location.latitude)) * Math.cos(radians(latitude)) * Math.sin(dLon / 2) ** 2;
+  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+const directionsUrl = (latitude: number, longitude: number) =>
+  `https://www.google.com/maps/dir/?api=1&origin=${temple.location.latitude},${temple.location.longitude}&destination=${latitude},${longitude}&travelmode=driving`;
+---
+<BaseLayout title="Bengaluru Digambar Jain Temple Directory | Shri Digambar Mahaveer Jain Temple (HAL)" description="Explore Digambar Jain temples across Bengaluru on one map, with approximate distances from Shri Digambar Mahaveer Jain Temple (HAL) and directions.">
+  <SiteHeader active="temples" language={language} />
+  <main class="temples-page">
+    <section class="page-hero temples-hero"><div class="container"><p class="eyebrow"><span></span> Explore Bengaluru</p><h1>Many temples.<br /><em>One shared path.</em></h1><p class="page-intro">Discover Digambar Jain temples and chaityalayas across Bengaluru. Use the map to explore locations, then open directions from our HAL temple.</p><a class="text-link" href="/visit">Visit Shri Digambar Mahaveer Jain Temple (HAL) <span aria-hidden="true">→</span></a></div></section>
+    <section class="temple-directory section-pad">
+      <div class="container">
+        <div class="temple-directory-heading"><div><p class="eyebrow"><span></span> Bengaluru temple directory</p><h2>Explore nearby <em>temples.</em></h2><p>Locations from the March 2025 community list.</p></div><span class="event-count"><span>{nearbyTemples.length}</span> <span>LOCATIONS</span></span></div>
+        <div class="temple-map-shell">
+          <div class="temple-map-heading"><div><strong>All locations at a glance</strong><small>Choose a marker to find its listing below.</small></div><span><i class="map-legend-home"></i> HAL temple <i class="map-legend-other"></i> Other temples</span></div>
+          <div id="temple-directory-map" class="temple-directory-map" role="application" aria-label="Map of Digambar Jain temples in Bengaluru"></div>
+          <p class="temple-map-credit">Map tiles © OpenStreetMap contributors. Distances are approximate straight-line measurements from the HAL temple; driving distances and travel times may differ.</p>
+        </div>
+        <div class="temple-directory-grid">
+          {nearbyTemples.map((place) => {
+            const distance = distanceFromTemple(place.coordinates.latitude, place.coordinates.longitude);
+            const directions = directionsUrl(place.coordinates.latitude, place.coordinates.longitude);
+            return <article class:list={["temple-directory-card", place.isHome && "is-home"]} id={`temple-${place.id}`} data-temple-marker data-temple-id={place.id} data-latitude={place.coordinates.latitude} data-longitude={place.coordinates.longitude}>
+              <div class="temple-directory-card-top"><span class="temple-index">{String(place.id).padStart(2, '0')}</span>{place.isHome ? <span class="temple-home-badge">Our temple</span> : <span class="temple-distance"><span>{distance.toFixed(1)}</span> <span>km</span><small> · approx.</small></span>}</div>
+              <h3>{place.name}</h3>
+              <p class="temple-directory-address">{place.address}</p>
+              {place.landmark && <p class="temple-directory-landmark">{place.landmark}</p>}
+              <div class="temple-directory-actions"><a href={place.mapUrl} target="_blank" rel="noreferrer">View location <span aria-hidden="true">↗</span></a><a href={directions} target="_blank" rel="noreferrer">Directions from HAL <span aria-hidden="true">↗</span></a></div>
+            </article>;
+          })}
+        </div>
+        <p class="temple-list-note">This directory is based on community-provided information. Please use the linked map listing to confirm the exact location before travelling. Temple timings and contact details can change.</p>
+      </div>
+    </section>
+  </main>
+  <SiteFooter />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <script is:inline>
+    window.addEventListener('load', () => {
+      const mapElement = document.getElementById('temple-directory-map');
+      if (!mapElement || !window.L) return;
+      const templeMap = window.L.map(mapElement, { scrollWheelZoom: false, zoomControl: true });
+      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a>',
+      }).addTo(templeMap);
+      const bounds = [];
+      document.querySelectorAll('[data-temple-marker]').forEach((card) => {
+        const lat = Number(card.dataset.latitude);
+        const lon = Number(card.dataset.longitude);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+        const home = card.classList.contains('is-home');
+        const placeName = card.querySelector('h3')?.textContent || 'Digambar Jain temple';
+        const icon = window.L.divIcon({
+          className: `temple-map-marker${home ? ' is-home' : ''}`,
+          html: '<span class="temple-marker-art" aria-hidden="true">श्री</span>',
+          iconSize: [36, 36],
+          iconAnchor: [18, 18],
+        });
+        const marker = window.L.marker([lat, lon], { icon, title: placeName, alt: placeName }).addTo(templeMap);
+        const detailLabel = { hi: 'मंदिर का विवरण देखें', kn: 'ದೇವಾಲಯದ ವಿವರ ವೀಕ್ಷಿಸಿ' }[document.documentElement.lang] || 'View temple details';
+        marker.bindPopup(`<strong>${card.querySelector('h3')?.textContent || ''}</strong><br><a href="#${card.id}">${detailLabel}</a>`);
+        marker.on('click', () => card.classList.add('is-selected'));
+        card.addEventListener('mouseenter', () => marker.openPopup());
+        bounds.push([lat, lon]);
+      });
+      if (bounds.length) templeMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 12 });
+      document.querySelectorAll('.temple-directory-actions a').forEach((link) => {
+        link.addEventListener('click', (event) => event.stopPropagation());
+      });
+    });
+  </script>
+</BaseLayout>
