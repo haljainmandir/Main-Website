@@ -19,10 +19,36 @@ const links = [
       <span class="brand-mark notranslate" translate="no" aria-hidden="true">श्री</span>
       <span class="brand-copy"><strong>{temple.name}</strong><small>Bengaluru, Karnataka</small></span>
     </a>
-    <nav aria-label="Main navigation">
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-navigation" aria-label="Open navigation menu">
+      <span></span><span></span><span></span>
+    </button>
+    <nav id="site-navigation" aria-label="Main navigation">
       {links.map((link) => <a class:list={[active === link.id && 'active']} href={link.href}>{link.label}</a>)}
       <a class="nav-contact" href="/visit#contact">Contact</a>
       <LanguageSwitcher language={language} />
     </nav>
   </div>
 </header>
+
+<script>
+  const menuToggle = document.querySelector<HTMLButtonElement>('.menu-toggle');
+  const navigation = document.querySelector<HTMLElement>('#site-navigation');
+
+  const closeMenu = () => {
+    menuToggle?.setAttribute('aria-expanded', 'false');
+    menuToggle?.setAttribute('aria-label', 'Open navigation menu');
+    navigation?.classList.remove('is-open');
+  };
+
+  menuToggle?.addEventListener('click', () => {
+    const isOpen = menuToggle.getAttribute('aria-expanded') === 'true';
+    menuToggle.setAttribute('aria-expanded', String(!isOpen));
+    menuToggle.setAttribute('aria-label', isOpen ? 'Open navigation menu' : 'Close navigation menu');
+    navigation?.classList.toggle('is-open', !isOpen);
+  });
+
+  navigation?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu));
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeMenu();
+  });
+</script>
